@@ -1,10 +1,11 @@
-from resource import Resource
+from recall_resource import Resource
 from datetime import datetime
 from storage import save_resources, load_resources
 from pathlib import Path
+from embedding_service import EmbeddingService
 
 
-
+embedding_service = EmbeddingService()
 resources = load_resources()
 
 def add_file():
@@ -32,7 +33,7 @@ def add_text():
         title=title,
         raw_text=text,
         created_at = datetime.now(),
-        embedding = None
+        embedding = embedding_service.generate_embedding(text)
     )
 
     resources.append(resource)

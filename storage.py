@@ -1,5 +1,5 @@
 import json
-from resource import Resource
+from recall_resource import Resource
 
 def save_resources(resources):
     resource_dict = []
