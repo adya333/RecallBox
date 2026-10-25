@@ -83,16 +83,11 @@ def search():
     results = search_service.search(query)
    
 
-    MIN_SIMILARITY = 0.25
+  
 
-    results = [
-      (resource, score)
-      for resource, score in results
-       if score >= MIN_SIMILARITY
-    ]
+    
 
-    top_k = 3
-    results = results[:top_k]
+   
 
     if not results:
       print("No relevant results found.")

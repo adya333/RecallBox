@@ -8,7 +8,7 @@ class SearchService:
       self.embedding_service = embedding_service
       self.resources = resources
 
-    def search(self, query):
+    def search(self, query, top_k=3, min_similarity=0.25):
       query_embedding = self.embedding_service.generate_embedding(query)
 
       results = []
@@ -25,4 +25,10 @@ class SearchService:
 
       results.sort(key=lambda x:x[1], reverse=True)
 
-      return results
+      results = [
+      (resource, score)
+      for resource, score in results
+       if score >= min_similarity
+    ]
+
+      return results[:top_k]
