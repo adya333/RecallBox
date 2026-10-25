@@ -1,6 +1,17 @@
 import json
 from recall_resource import Resource
 
+
+def backfill_embeddings(resources, embedding_service):
+    updated_count = 0
+
+    for resource in resources:
+      if resource.embedding is None:
+        resource.embedding = embedding_service.generate_embedding(resource.raw_text)
+        updated_count += 1
+    return updated_count
+
+
 def save_resources(resources):
     resource_dict = []
 

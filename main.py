@@ -1,12 +1,29 @@
+from re import search
 from recall_resource import Resource
 from datetime import datetime
-from storage import save_resources, load_resources
+from storage import save_resources, load_resources, backfill_embeddings
 from pathlib import Path
 from embedding_service import EmbeddingService
+from search_service import SearchService
 
 
 embedding_service = EmbeddingService()
 resources = load_resources()
+search_service = SearchService(embedding_service, resources)
+
+# Backfill function to add embeddings into the already existing resources
+# which currently dont have any embeddings
+# updated_count = backfill_embeddings(resources, embedding_service)
+# for resource in resources:
+#     print(
+#         resource.title,
+#         "->",
+#         "Embedding exists" if resource.embedding is not None else "Embedding missing"
+#     )
+
+# if(updated_count>0):
+#   save_resources(resources)
+#   print(f"Backfilled embeddings: {updated_count}")
 
 def add_file():
     file_path_input = input("Enter file path:")
@@ -23,6 +40,8 @@ def add_file():
     print("Path:", file_path)
     print("Name:", file_path.name)
     print("Extension:",file_path.suffix)
+
+
 
 def add_text():
     title = input("Enter title: ")
@@ -42,6 +61,7 @@ def add_text():
     print("Resource added successfully!")
 
 
+
 def show_resources():
     if len(resources) == 0:
         print("RecallBox is empty.")
@@ -50,13 +70,25 @@ def show_resources():
     for resource in resources:
         print( resource.to_dict())
 
+def search():
+    query = input("Enter search query:")
+
+    results = search_service.search(query)
+    
+    for resource, score in results:
+      print(f"Title: {resource.title}")
+      print(f"Text: {resource.raw_text}")
+      print(f"Similarity: {score:.4f}")
+
+
 while True:
 
     print("\n--- RecallBox ---")
     print("1. Add text")
     print("2. Add file")
     print("3. Show resources")
-    print("4. Exit")
+    print("4. Search")
+    print("5. Exit")
 
     choice = input("Choose an option: ")
 
@@ -70,6 +102,8 @@ while True:
         show_resources()
 
     elif choice == "4":
+        search()
+    elif choice == "5":
         break
 
     else:
