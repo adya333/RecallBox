@@ -71,9 +71,31 @@ def show_resources():
         print( resource.to_dict())
 
 def search():
-    query = input("Enter search query:")
+    query = input("Enter search query:").strip()
+
+    if not query:
+      print("Search query cannot be empty.")
+      return
+    
+    if not resources:
+      print("Recall Box is empty. Add something before searching..")
 
     results = search_service.search(query)
+   
+
+    MIN_SIMILARITY = 0.25
+
+    results = [
+      (resource, score)
+      for resource, score in results
+       if score >= MIN_SIMILARITY
+    ]
+
+    top_k = 3
+    results = results[:top_k]
+
+    if not results:
+      print("No relevant results found.")
     
     for resource, score in results:
       print(f"Title: {resource.title}")
