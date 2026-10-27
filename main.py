@@ -5,11 +5,14 @@ from storage import save_resources, load_resources, backfill_embeddings
 from pathlib import Path
 from embedding_service import EmbeddingService
 from search_service import SearchService
-
+from lexical_search_service import LexicalSearchService
+from hybrid_search_service import HybridSearchService
 
 embedding_service = EmbeddingService()
 resources = load_resources()
 search_service = SearchService(embedding_service, resources)
+lexical_search_service = LexicalSearchService(resources)
+hybrid_search_service = HybridSearchService(search_service, lexical_search_service)
 
 # Backfill function to add embeddings into the already existing resources
 # which currently dont have any embeddings
@@ -80,7 +83,7 @@ def search():
     if not resources:
       print("Recall Box is empty. Add something before searching..")
 
-    results = search_service.search(query)
+    results = hybrid_search_service.search(query)
    
 
   
@@ -95,7 +98,7 @@ def search():
     for resource, score in results:
       print(f"Title: {resource.title}")
       print(f"Text: {resource.raw_text}")
-      print(f"Similarity: {score:.4f}")
+      print(f"Relevance Score: {score:.4f}")
 
 
 while True:

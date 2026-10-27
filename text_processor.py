@@ -43,11 +43,11 @@ def vectorize(text, vocabulary):
 
     return vector
 
-text1 = ["Spring Security provides authentication",
- "Spring Security handles user authentication fuck fuck"]
+# text1 = ["Spring Security provides authentication",
+#  "Spring Security handles user authentication fuck fuck"]
 
-vocabulary = build_vocabulary(text1)
-print(vocabulary)
+# vocabulary = build_vocabulary(text1)
+# print(vocabulary)
 
-print(vectorize(text1[0], vocabulary))
-print(vectorize(text1[1], vocabulary))
+# print(vectorize(text1[0], vocabulary))
+# print(vectorize(text1[1], vocabulary))
