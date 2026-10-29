@@ -3,9 +3,10 @@
 
 class HybridSearchService:
 
-  def __init__(self, search_service, lexical_search_service):
+  def __init__(self, search_service, lexical_search_service, reranking_service):
     self.search_service = search_service
     self.lexical_search_service = lexical_search_service
+    self.reranking_service = reranking_service
 
   def search(self, query, top_k = 3, min_score=0.2):
     semantic_results = self.search_service.search(query, 
@@ -43,9 +44,34 @@ class HybridSearchService:
     (resource, score)
     for resource, score in results
     if score >= min_score
-]
+    ]
     results.sort(key=lambda x:x[1], reverse=True)
     return results[:top_k]
 
-    
-      
+
+  def search_with_reranking(self, query, top_k=3):
+        hybrid_results = self.search(
+            query,
+            top_k=10
+        )
+
+        resources = [
+            resource
+            for resource, score in hybrid_results
+        ]
+
+        reranked_results = self.reranking_service.reranking(
+            query,
+            resources
+        )
+
+        return reranked_results[:top_k]
+
+
+
+
+
+
+
+
+

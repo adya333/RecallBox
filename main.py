@@ -7,12 +7,14 @@ from embedding_service import EmbeddingService
 from search_service import SearchService
 from lexical_search_service import LexicalSearchService
 from hybrid_search_service import HybridSearchService
+from reranking_service import RerankingService
 
 embedding_service = EmbeddingService()
 resources = load_resources()
 search_service = SearchService(embedding_service, resources)
 lexical_search_service = LexicalSearchService(resources)
-hybrid_search_service = HybridSearchService(search_service, lexical_search_service)
+reranking_service = RerankingService()
+hybrid_search_service = HybridSearchService(search_service, lexical_search_service, reranking_service)
 
 # Backfill function to add embeddings into the already existing resources
 # which currently dont have any embeddings
@@ -83,7 +85,7 @@ def search():
     if not resources:
       print("Recall Box is empty. Add something before searching..")
 
-    results = hybrid_search_service.search(query)
+    results = hybrid_search_service.search_with_reranking(query)
    
 
   
