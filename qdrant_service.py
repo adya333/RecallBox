@@ -1,6 +1,7 @@
 
 from pathlib import Path
-
+from recall_resource import Resource
+from datetime import datetime
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, MatchAny
 
@@ -20,6 +21,45 @@ class QdrantService:
 
         self.create_collection()
 
+    def load_resources(self):
+        resources = []
+        offset = None
+
+        while True:
+            points, next_offset = self.client.scroll(
+                collection_name=self.collection_name,
+                limit=100,
+                offset=offset,
+                with_payload=True,
+                with_vectors=True
+            )
+
+            for point in points:
+                payload = point.payload
+
+                resource = Resource(
+                    resource_id=payload["resource_id"],
+                    resource_type=payload["resource_type"],
+                    title=payload["title"],
+                    raw_text=payload["raw_text"],
+                    created_at=datetime.fromisoformat(payload["created_at"]),
+                    embedding=point.vector,
+                    original_path=payload.get("original_path"),
+                    category=payload.get("category"),
+                    subcategory=payload.get("subcategory"),
+                    tags=payload.get("tags", [])
+                )
+
+                resources.append(resource)
+
+            if next_offset is None:
+                break
+
+            offset = next_offset
+
+        return resources
+    
+    
     def build_filter(self, resource_type=None, category=None, tags=None):
       conditions = []
 
@@ -106,10 +146,13 @@ class QdrantService:
                 payload={
                     "resource_id": resource.resource_id,
                     "title": resource.title,
+                    "raw_text": resource.raw_text,
                     "resource_type": resource.resource_type,
                     "category": resource.category,
                     "subcategory": resource.subcategory,
-                    "tags": resource.tags
+                    "tags": resource.tags,
+                    "created_at": resource.created_at.isoformat(),
+                    "original_path": resource.original_path
                 }
             )
 

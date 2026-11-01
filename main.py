@@ -1,8 +1,8 @@
-from re import search
+
 from recall_resource import Resource
 from datetime import datetime
-from storage import save_resources, load_resources, backfill_embeddings
 from pathlib import Path
+
 from embedding_service import EmbeddingService
 from search_service import SearchService
 from lexical_search_service import LexicalSearchService
@@ -10,27 +10,35 @@ from hybrid_search_service import HybridSearchService
 from reranking_service import RerankingService
 from qdrant_service import QdrantService
 
+
+# Initialize services
 embedding_service = EmbeddingService()
-resources = load_resources()
+
 qdrant_service = QdrantService()
-search_service = SearchService(embedding_service, resources, qdrant_service)
+
+# Load all existing resources directly from Qdrant
+resources = qdrant_service.load_resources()
+
+print(f"Loaded {len(resources)} resources from Qdrant.")
+
+
+# Initialize search services
+search_service = SearchService(
+    embedding_service,
+    resources,
+    qdrant_service
+)
+
 lexical_search_service = LexicalSearchService(resources)
+
 reranking_service = RerankingService()
-hybrid_search_service = HybridSearchService(search_service, lexical_search_service, reranking_service)
 
-# Backfill function to add embeddings into the already existing resources
-# which currently dont have any embeddings
-# updated_count = backfill_embeddings(resources, embedding_service)
-# for resource in resources:
-#     print(
-#         resource.title,
-#         "->",
-#         "Embedding exists" if resource.embedding is not None else "Embedding missing"
-#     )
+hybrid_search_service = HybridSearchService(
+    search_service,
+    lexical_search_service,
+    reranking_service
+)
 
-# if(updated_count>0):
-#   save_resources(resources)
-#   print(f"Backfilled embeddings: {updated_count}")
 
 def add_file():
     file_path_input = input("Enter file path:")
@@ -46,8 +54,7 @@ def add_file():
 
     print("Path:", file_path)
     print("Name:", file_path.name)
-    print("Extension:",file_path.suffix)
-
+    print("Extension:", file_path.suffix)
 
 
 def add_text():
@@ -58,51 +65,51 @@ def add_text():
         resource_type="TEXT",
         title=title,
         raw_text=text,
-        created_at = datetime.now(),
-        embedding = embedding_service.generate_embedding(text)
+        created_at=datetime.now(),
+        embedding=embedding_service.generate_embedding(text)
     )
 
+    # Save directly to Qdrant
+    qdrant_service.upsert_resources([resource])
+
+    # Update in-memory resources for BM25 and other search services
     resources.append(resource)
-    save_resources(resources)
 
     print("Resource added successfully!")
 
 
-
 def show_resources():
-    if len(resources) == 0:
+    if not resources:
         print("RecallBox is empty.")
         return
 
     for resource in resources:
-        print( resource.to_dict())
+        print(f"Title: {resource.title}")
+        print(f"ID: {resource.resource_id}")
+        print("-" * 40)
+
 
 def search():
-    query = input("Enter search query:").strip()
+    query = input("Enter search query: ").strip()
 
     if not query:
-      print("Search query cannot be empty.")
-      return
-    
+        print("Search query cannot be empty.")
+        return
+
     if not resources:
-      print("Recall Box is empty. Add something before searching..")
+        print("RecallBox is empty. Add something before searching.")
+        return
 
     results = hybrid_search_service.search_with_reranking(query)
-   
-
-  
-
-    
-
-   
 
     if not results:
-      print("No relevant results found.")
-    
+        print("No relevant results found.")
+        return
+
     for resource, score in results:
-      print(f"Title: {resource.title}")
-      print(f"Text: {resource.raw_text}")
-      print(f"Relevance Score: {score:.4f}")
+        print(f"Title: {resource.title}")
+        print(f"Text: {resource.raw_text}")
+        print(f"Relevance Score: {score:.4f}")
 
 
 while True:
@@ -127,7 +134,10 @@ while True:
 
     elif choice == "4":
         search()
+
     elif choice == "5":
+        qdrant_service.close()
+        print("Qdrant connection closed.")
         break
 
     else:
