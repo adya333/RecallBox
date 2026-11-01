@@ -8,10 +8,12 @@ from search_service import SearchService
 from lexical_search_service import LexicalSearchService
 from hybrid_search_service import HybridSearchService
 from reranking_service import RerankingService
+from qdrant_service import QdrantService
 
 embedding_service = EmbeddingService()
 resources = load_resources()
-search_service = SearchService(embedding_service, resources)
+qdrant_service = QdrantService()
+search_service = SearchService(embedding_service, resources, qdrant_service)
 lexical_search_service = LexicalSearchService(resources)
 reranking_service = RerankingService()
 hybrid_search_service = HybridSearchService(search_service, lexical_search_service, reranking_service)

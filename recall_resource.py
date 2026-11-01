@@ -1,53 +1,67 @@
+
 from datetime import datetime
 import uuid
 
+
 class Resource:
-    def __init__(self, resource_type, title, raw_text, created_at, embedding, resource_id=None):
-        if resource_id is None:
-            self.resource_id = str(uuid.uuid4())
-        else:
-            self.resource_id = resource_id
-        self.type = resource_type
+
+    def __init__(
+        self,
+        resource_type,
+        title,
+        raw_text,
+        created_at=None,
+        embedding=None,
+        original_path=None,
+        category=None,
+        subcategory=None,
+        tags=None,
+        resource_id=None
+    ):
+
+        self.resource_id = resource_id or str(uuid.uuid4())
+
+        self.resource_type = resource_type
         self.title = title
         self.raw_text = raw_text
 
-        self.original_path = None
+        self.original_path = original_path
 
-        self.category = None
-        self.subcategory = None
-        self.tags = []
-        self.created_at = created_at
+        self.category = category
+        self.subcategory = subcategory
+        self.tags = tags if tags is not None else []
+
+        self.created_at = created_at or datetime.now()
         self.embedding = embedding
 
     def to_dict(self):
+
         return {
             "resource_id": self.resource_id,
-        "type": self.type,
-        "title": self.title,
-        "original_path": self.original_path,
-        "raw_text": self.raw_text,
-        "category": self.category,
-        "subcategory": self.subcategory,
-        "tags": self.tags,
-        "created_at": self.created_at.isoformat(),
-        "embedding": self.embedding
-        } 
-
-    def load_resources():
-        with open("resources.json", "r") as file:
-            data = json.load(file)   
-        print(data)
+            "type": self.resource_type,
+            "title": self.title,
+            "raw_text": self.raw_text,
+            "original_path": self.original_path,
+            "category": self.category,
+            "subcategory": self.subcategory,
+            "tags": self.tags,
+            "created_at": self.created_at.isoformat(),
+            "embedding": self.embedding
+        }
 
     @classmethod
-    # This is a decorator in python that is is used to define a method 
-    # that is bound to the class itself rather than an individual object
-    #  instance. The cls represents the class itself.
-    def to_obj(cls,data):
-        resource = cls(resource_id=data["resource_id"],
-        resource_type=data["type"],
-        title=data["title"],
-        raw_text=data["raw_text"],
-        created_at =  datetime.fromisoformat(data["created_at"]),
-        embedding = data["embedding"])
+    def to_obj(cls, data):
 
-        return resource
+        return cls(
+            resource_id=data["resource_id"],
+            resource_type=data.get("resource_type", data.get("type")),
+            title=data["title"],
+            raw_text=data["raw_text"],
+            original_path=data.get("original_path"),
+            category=data.get("category"),
+            subcategory=data.get("subcategory"),
+            tags=data.get("tags"),
+            created_at=datetime.fromisoformat(data["created_at"])
+                if data.get("created_at") else None,
+            embedding=data.get("embedding")
+        )
